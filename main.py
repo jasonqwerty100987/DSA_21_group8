@@ -1,6 +1,5 @@
 import nqueen as nq
-import time as t
-import pprint
+import time as time
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import colors as c
@@ -25,47 +24,62 @@ def print_solution(solution, n, title, time, i):
     plt.yticks(np.arange(0, n+1, 1.0))
     plt.title(title + " " + str(time)+" seconds")
     plt.grid()
-    # pprint.pprint(result)
 
-if __name__ == "__main__":
-
-    n = int(sys.argv[1])
+def direct_compare(n):
+    result = []
     print("n = {}".format(n))
-    # print(nq.get_random_state(n))
-    # print("Using Hill Climbing")
-    # # Get a fully solved state for a given n
-    # start = t.time()
-    # solution = nq.n_queens(n, choice = 1)
-    # end = t.time()
-    # print("A valid solution: ")
-    # print_solution(solution, n, "Hill Climbing", end - start, 1)
-    # print("Hill Climbing takes {} seconds to run".format(end - start))
-    # print("----------------------------------------------------------------")
-    # print("Using Simulated Annealing")
-    # start = t.time()
-    # solution = nq.n_queens(n, choice = 2, t = 30.0, cr = 0.94, iter = 50, threshold = 1e-5)
-    # end = t.time()
-    # print("A valid solution: ")
-    # print_solution(solution, n, "Simulated Annealing", end - start, 2)
-    # print("Simulated Annealing takes {} seconds to run".format(end - start))
-    # plt.show()
+    print(nq.get_random_state(n))
+    print("Using Hill Climbing")
+    # Get a fully solved state for a given n
+    start = time.time()
+    solution = nq.n_queens(n, choice = 1)
+    end = time.time()
+    print_solution(solution, n, "Hill Climbing", end - start, 1)
+    print("Hill Climbing takes {} seconds to run".format(end - start))
+    print("----------------------------------------------------------------")
+    print("Using Simulated Annealing")
+    start = time.time()
+    solution = nq.n_queens(n, choice = 2, t = 30.0, cr = 0.94, iter = 50, threshold = 1e-5)
+    end = time.time()
+    print_solution(solution, n, "Simulated Annealing", end - start, 2)
+    print("Simulated Annealing takes {} seconds to run".format(end - start))
+    plt.show()
+
+def experiment(n_start, n_end, method = "Hill", **kwargs):
+    choice = None
+    t = None
+    cr = None
+    iter = None
+    threshold = None
+    name = None
+    if method == "Hill":
+        choice = 1
+        name = "Hill Climbing"
+    elif method == "Sim":
+        choice = 2
+        t = float(kwargs["t"])
+        cr = float(kwargs["cr"])
+        iter = int(kwargs["iter"])
+        threshold = float(kwargs["threshold"])
+        name = "Simulated Annealing"
+    else:
+        print("Invalid Method Selection")
+        return
+
     result = []
     total_time = []
     another_one = []
-    for n in range(6, 30):
+    for n in range(n_start, n_end):
         another_one.append([n])
         for i in range(20):
-            start = t.time()
-            solution = nq.n_queens(n, choice=1, t = 30.0, cr = 0.94, iter = 50, threshold = 1e-5)
-            end = t.time()
+            start = time.time()
+            solution = nq.n_queens(n, choice=choice, t = t, cr = cr, iter = iter, threshold = threshold)
+            end = time.time()
             used_time = end - start
             total_time.append(used_time)
             result.append([n, 1000 * used_time])
             another_one[n-6].append(1000 * used_time)
-        # print("A valid solution: ")
-        # print_solution(solution, n)
-        # print("Hill Climbing takes {} seconds to run".format(end - start))
-        print("n = {} Simulated Annealing takes average {} millisecond to run for 20 times".format(n, 1000 * sum(total_time) / 20))
+        print("n = {} {} takes average {} millisecond to run for 20 times".format(n, name, 1000 * sum(total_time) / 20))
 
         total_time.clear()
 
@@ -99,13 +113,23 @@ if __name__ == "__main__":
     plt.figure()
     plt.errorbar(x, y, xerr=0, yerr=y_error, fmt="o", ls='none')
     plt.xticks((np.arange(min(x), max(x)+1, 1.0)))
-    plt.title("Execution Time of Hill Climbing VS n")
+    plt.title("Execution Time of {} VS n".format(name))
     plt.show()
 
-
-
-    df = pd.DataFrame(np.asarray(result), columns = ['n', 'Execution of in millisecond'])
-    df.to_excel("Hill Climbing error bar.xlsx")
-
     df = pd.DataFrame(np.asarray(another_one))
-    df.to_excel("Hill Climbing error bar1.xlsx")
+    df.to_excel("{} result n from {} to {}.xlsx".format(name, n_start, n_end))
+
+if __name__ == "__main__":
+    # Parameters
+    n = 6 # Control the board size that is used for direct compareson between the two algorithms
+    n_start = 6 # Control the starting size of the chess board for the experiment
+    n_end = 8 # Control the ending size of the chess board for the experiment
+
+    # Run Simulated Annealing and Hill Climbing on n-queen problem, and plot solutions found by two methods
+    direct_compare(n)
+    # Run Hill Climbing for n ranging from n_start to n_end and plot error bar graph, and save result to excel at current directory
+    experiment(n_start, n_end, "Hill")
+    # Run Simulated Annealing for n ranging from n_start to n_end and plot error bar graph, and save result to excel at current directory
+    # You can fine tune the Parameters that is passed into Simulated Annealing
+    # t = temperature, cr = cooling rate, iter = the number of iteration per temperature drop, threshold = threshold
+    experiment(n_start, n_end, "Sim", t = 30.0, cr = 0.98, iter = 30, threshold = 0.1)
