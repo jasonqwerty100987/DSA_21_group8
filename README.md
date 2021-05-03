@@ -15,11 +15,11 @@ N-queen problem can be solved by many searching algoriths, and hill climbing and
 To run our project, you first need to clone the main.py and nqueen.py to your local directory.
 Furthermore, you need to install:
 
--numpy
+- numpy
 
--matplotlib
+- matplotlib
 
--pandas 
+- pandas 
 
 
 ## To Run
